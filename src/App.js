@@ -1,52 +1,41 @@
-import {Box, Center, Text, Heading, VStack, Button} from "@chakra-ui/react";
+import { Box, Center, Text, Heading, VStack, Button } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
+import axios from "axios";
+import { type } from "@testing-library/user-event/dist/type";
+
+import {
+  extractDroneDataFromXML,
+  fetchDroneData,
+  fetchPilotData,
+} from "./utils/utils";
+
+const convert = require("xml-js");
+
 function App() {
-
-  // fetch('https://assignments.reaktor.com/birdnest/drones', {
-  //   method: 'GET',
-  //   mode: 'no-cors',
-  // })
-  //   .then(res => res.text())
-  //   .then(data => {
-  //     const parser = new DOMParser();
-  //     const xml = parser.parseFromString(data, 'application/xml')
-  //     console.log(xml);
-  //   })
-  //   .catch(console.error);
-
- 
-  // fetch('https://catfact.ninja/fact')
-  //   .then(res => res.text())
-  //   .then(data => {
-  //     console.log(data)
-  //   });
-
-
-
   const [getData, setGetData] = useState(true);
-  const fetchDroneData = () => {
-    fetch('https://catfact.ninja/fact', {
-      method: 'GET',
-      mode: 'no-cors',
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log(data)
-      });
-  }
+  const [drones, setDrones] = useState({});
 
   useEffect(() => {
-    fetchDroneData();
-  }, [])
-
+    const dronesData = fetchDroneData();
+    setDrones(dronesData);
+  }, [getData]);
 
   return (
-    <Box w="100vw" h="100vh" >
+    <Box w="100vw" h="100vh">
       <Center>
         <VStack>
           <Heading>Birdnest</Heading>
-          <Button onClick={() => setGetData((prev) => !prev)}>Fetch Data</Button>
+          <Button onClick={() => setGetData((prev) => !prev)}>
+            Fetch Data
+          </Button>
+          <Button
+            onClick={() => {
+              console.log(drones);
+            }}
+          >
+            Print Drones
+          </Button>
         </VStack>
       </Center>
     </Box>
