@@ -1,4 +1,12 @@
-import { Box, Center, Text, Heading, VStack, Button } from "@chakra-ui/react";
+import {
+  Box,
+  Center,
+  Text,
+  Heading,
+  VStack,
+  HStack,
+  Button,
+} from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
 import axios from "axios";
@@ -10,32 +18,15 @@ import {
   fetchPilotData,
 } from "./utils/utils";
 
-const convert = require("xml-js");
+import DronesDisplay from "./components/DronesDisplay";
 
 function App() {
-  const [getData, setGetData] = useState(true);
-  const [drones, setDrones] = useState({});
-
-  useEffect(() => {
-    const dronesData = fetchDroneData();
-    setDrones(dronesData);
-  }, [getData]);
-
   return (
     <Box w="100vw" h="100vh">
       <Center>
         <VStack>
           <Heading>Birdnest</Heading>
-          <Button onClick={() => setGetData((prev) => !prev)}>
-            Fetch Data
-          </Button>
-          <Button
-            onClick={() => {
-              console.log(drones);
-            }}
-          >
-            Print Drones
-          </Button>
+          <DronesDisplay />
         </VStack>
       </Center>
     </Box>
