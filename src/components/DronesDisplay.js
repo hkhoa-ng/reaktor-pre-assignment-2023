@@ -1,34 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { nanoid } from "nanoid";
 import { Box, Text, VStack, HStack, Heading } from "@chakra-ui/react";
-import { fetchDroneData, fetchPilotData } from "../utils/utils";
+import {
+  fetchDroneData,
+  fetchPilotData,
+  fetchViolatedPilots,
+} from "../utils/utils";
+import { writePilotData } from "../firebase/Firebase";
+import PilotContext from "../context/PilotContext";
 
-function DronesDisplay() {
+function DronesDisplay(props) {
   const DELAY_2_SECS = 2000;
 
   const [dronesData, setDronesData] = useState({});
-  const [dronesElement, setDronesElement] = useState([]);
   const [pilotElement, setPilotElement] = useState([]);
-  const [violatedPilots, setViolatedPilots] = useState([]);
+  const db = props.db;
+
+  // Using context API
+  const { violatedPilots, updateViolatedPilots, setPreviousViolatedPilots } =
+    useContext(PilotContext);
 
   const getDronePromise = () => {
     fetchDroneData().then((data) => {
       setDronesData(data);
-      setDronesElement(
-        data.drones.map((drone) => {
-          return (
-            <HStack key={nanoid()}>
-              <Text>{drone.serialNum}</Text>
-              <Text>{drone.distance}</Text>
-            </HStack>
-          );
-        })
-      );
     });
   };
 
+  // Get new drone data every 2 seconds
   useEffect(() => {
-    // Get new drone data every 2 seconds
     const interval = setInterval(() => {
       console.log("Get new drone data at " + new Date().toLocaleTimeString());
       getDronePromise();
@@ -36,52 +35,37 @@ function DronesDisplay() {
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch pilot data of drones violated the NDZ
   useEffect(() => {
-    try {
+    if (dronesData.drones !== undefined) {
       dronesData.drones.forEach((drone) => {
-        // Fetch pilot data of drones violated the NDZ
         if (drone.distance < 100) {
           fetchPilotData(drone.serialNum).then((pilot) => {
             try {
-              // Find if the violated pilot already in the violated array
-              const i = violatedPilots.findIndex(
-                (vP) => vP.id === pilot.pilotId
+              // Update the violated pilots in the pilot context
+              updateViolatedPilots({
+                ...pilot,
+                timestamp: drone.timestamp,
+              });
+              // Write the data of the violated pilot to the database
+              writePilotData(
+                db,
+                pilot.pilotId,
+                `${pilot.firstName} ${pilot.lastName}`,
+                pilot.email,
+                drone.timestamp
               );
-              // If not in yet, then add new. If already in, update the timestamp
-              if (i === -1) {
-                setViolatedPilots([
-                  ...violatedPilots,
-                  {
-                    id: pilot.pilotId,
-                    name: `${pilot.firstName} ${pilot.lastName}`,
-                    email: pilot.email,
-                    phoneNum: pilot.phoneNumber,
-                    timestamp: drone.timestamp,
-                  },
-                ]);
-              } else {
-                const updatedVPilot = violatedPilots.map((vP, index) => {
-                  if (index === i) {
-                    return {
-                      ...vP,
-                      timestamp: drone.timestamp,
-                    };
-                  }
-                  return vP;
-                });
-                setViolatedPilots(updatedVPilot);
-              }
             } catch (error) {
               console.log(error);
             }
           });
         }
       });
-    } catch (error) {}
+    }
   }, [dronesData]);
 
+  // Set the elements and render the all the violated pilot names
   useEffect(() => {
-    // Render the all the violated pilot names
     setPilotElement(
       violatedPilots.map((pilot) => {
         try {
@@ -103,7 +87,6 @@ function DronesDisplay() {
   return (
     <Box>
       <VStack>
-        {/* <Box>{dronesElement}</Box> */}
         <Heading>Violated pilots</Heading>
         {pilotElement}
       </VStack>
