@@ -7,19 +7,25 @@ const {
   extractDronesData,
   getSerialOfViolatedDrones,
   timestampFormat,
+  compareTimestamp,
+  filterTenMinutes,
 } = require("./utils/dataUtils");
+
 const {
   initFirebase,
   writePilotData,
-  writePilotName,
   getDatabaseOnChange,
 } = require("./firebaseDB/Firebase");
+
+// Define some constants
+const TWO_SECOND = 2000;
+const TEN_MINUTE = 600000;
 
 // Connect to the database
 const db = initFirebase();
 
 // Timer to fetch and update every 2 seconds
-const timer = setInterval(() => {
+const fetchTimer = setInterval(() => {
   fetchDroneData().then((data) => {
     console.log(
       "Fetching drones data at " + timestampFormat(data.snapshotTimestamp)
@@ -38,7 +44,6 @@ const timer = setInterval(() => {
               pilot.phoneNumber,
               drone.timestamp
             );
-            writePilotName(db, `${pilot.firstName} ${pilot.lastName}`);
           });
         } catch (error) {
           console.log(error);
@@ -46,14 +51,30 @@ const timer = setInterval(() => {
       });
     }
   });
-}, 2000);
+}, TWO_SECOND);
+
+// Timer to delete old pilot entries every 10 minutes (when there is no trafic to the frontend)
+const deleteTimer = setInterval(() => {
+  const pilotData = getDatabaseOnChange(db);
+  filterTenMinutes(db, pilotData);
+}, TEN_MINUTE);
 
 const stopRepeat = () => {
-  clearInterval(timer);
+  clearInterval(fetchTimer);
+  clearInterval(deleteTimer);
 };
 
+// Everytime React.js frontend call the backend API:
+// Get all pilot data from the database and sort them in order of latest violation timestamp
+// Filter out and delete all the violation that > 10 minutes from the database
 app.get("/api", (req, res) => {
-  res.json(getDatabaseOnChange(db));
+  // Fetch data from backend API
+  const pilotData = getDatabaseOnChange(db).sort((a, b) => {
+    return compareTimestamp(a, b);
+  });
+  // Delete all the entries from more than 10 minutes ago
+  filterTenMinutes(db, pilotData);
+  res.json(pilotData);
 });
 
 app.listen(5000, () => {

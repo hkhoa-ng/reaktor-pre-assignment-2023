@@ -1,4 +1,5 @@
 const parser = require("xml2json");
+const { deletePilot } = require("../firebaseDB/Firebase");
 
 const extractDronesData = (data) => {
   const dronesData = [];
@@ -46,35 +47,26 @@ const timestampFormat = (timeString) => {
 };
 
 const compareTimestamp = (a, b) => {
-  const dateArrA = [
-    ...a.timestamp.split("T")[0].split("-"),
-    ...a.timestamp.split("T")[1].split(".")[0].split(":"),
-  ];
-  const dateArrB = [
-    ...b.timestamp.split("T")[0].split("-"),
-    ...b.timestamp.split("T")[1].split(".")[0].split(":"),
-  ];
-  const dateA = new Date(
-    dateArrA[0],
-    dateArrA[1],
-    dateArrA[2],
-    dateArrA[3],
-    dateArrA[4],
-    dateArrA[5]
-  );
-  const dateB = new Date(
-    dateArrB[0],
-    dateArrB[1],
-    dateArrB[2],
-    dateArrB[3],
-    dateArrB[4],
-    dateArrB[5]
-  );
+  const dateA = new Date(a.timestamp);
+  const dateB = new Date(b.timestamp);
   return dateA - dateB;
+};
+
+const filterTenMinutes = (db, pilotData) => {
+  pilotData.forEach((pilot) => {
+    const now = new Date();
+    const pilotTime = new Date(pilot.timestamp);
+    const diff = Math.abs(now - pilotTime);
+    if (diff > 600000) {
+      deletePilot(db, pilot.id);
+    }
+  });
 };
 
 module.exports = {
   extractDronesData,
   getSerialOfViolatedDrones,
   timestampFormat,
+  compareTimestamp,
+  filterTenMinutes,
 };

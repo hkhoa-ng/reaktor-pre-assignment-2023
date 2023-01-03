@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 const { initializeApp } = require("firebase/app");
-const { getDatabase, ref, set, onValue } = require("firebase/database");
+const { getDatabase, ref, set, onValue, remove } = require("firebase/database");
 
 const config = require("./firebaseConfig.json");
 
@@ -24,6 +24,18 @@ const writePilotName = (db, name) => {
   set(ref(db, "violatedNames/" + name), {
     fullname: name,
   });
+};
+
+const writeClosestDistance = (db, distance) => {};
+
+const deletePilot = (db, id) => {
+  remove(ref(db, "violatedPilots/" + id))
+    .then(() => {
+      console.log("Deleted pilot " + id);
+    })
+    .catch((err) => {
+      console.log("Error while trying to delete pilot: " + err);
+    });
 };
 
 const getDatabaseOnChange = (db) => {
@@ -52,4 +64,5 @@ module.exports = {
   writePilotData,
   writePilotName,
   getDatabaseOnChange,
+  deletePilot,
 };
