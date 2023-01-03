@@ -2,7 +2,7 @@
   "homepage": "https://hkhoa-ng.github.io/reaktor-pre-assignment-2023",
   "name": "reaktor-birdnest",
   "version": "0.1.0",
-  "proxy": "http://localhost:5000",
+  "proxy": "https://khoa-ng-birdnest-backend.fly.dev/",
   "private": true,
   "dependencies": {
     "@chakra-ui/react": "^2.4.3",

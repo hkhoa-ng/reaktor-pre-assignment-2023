@@ -77,6 +77,6 @@ app.get("/api", (req, res) => {
   res.json(pilotData);
 });
 
-app.listen(5000, () => {
-  console.log("Server started on port 5000");
+app.listen(8080, () => {
+  console.log("Server started on port 8080");
 });
