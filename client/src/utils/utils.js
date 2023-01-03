@@ -34,4 +34,28 @@ const createPilotElements = (pilotData) => {
   return <Tbody>{pilotElement}</Tbody>;
 };
 
-export { timestampFormat, compareTimestamp, createPilotElements };
+const stopServer = () => {
+  fetch("/stop")
+    .then((res) => res.json())
+    .then((data) => console.log(data))
+    .catch((err) => {
+      console.log("Error while trying to stop the server: " + err);
+    });
+};
+
+const startServer = () => {
+  fetch("/resume")
+    .then((res) => res.json())
+    .then((data) => console.log(data))
+    .catch((err) => {
+      console.log("Error while trying to start the server: " + err);
+    });
+};
+
+export {
+  timestampFormat,
+  compareTimestamp,
+  createPilotElements,
+  stopServer,
+  startServer,
+};

@@ -12,12 +12,12 @@ import {
 } from "@chakra-ui/react";
 import { initFirebase } from "./firebase/Firebase";
 import { useState, useEffect } from "react";
-import { createPilotElements } from "./utils/utils";
+import { createPilotElements, startServer, stopServer } from "./utils/utils";
 
 function App() {
   const [db, setDb] = useState();
-  const [update, setUpdate] = useState(true);
   const [pilotElements, setPilotElements] = useState([]);
+  const [serverIsOn, setServerIsOn] = useState(false);
 
   // Accessing the Firebase database
   useEffect(() => {
@@ -43,10 +43,16 @@ function App() {
           <Heading>Birdnest</Heading>
           <Button
             onClick={() => {
-              setUpdate((prev) => !prev);
+              if (serverIsOn) {
+                stopServer();
+                setServerIsOn(false);
+              } else {
+                startServer();
+                setServerIsOn(true);
+              }
             }}
           >
-            {update ? "Pause" : "Resume"}
+            {serverIsOn ? "Stop Server" : "Start Server"}
           </Button>
           <Heading>Violated Pilots</Heading>
 
