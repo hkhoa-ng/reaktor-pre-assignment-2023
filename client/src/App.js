@@ -23,19 +23,25 @@ function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       console.log("Get new drone data at " + new Date().toLocaleTimeString());
-      fetch("/api")
-        .then((res) => res.json())
-        .then((data) => {
-          try {
-            setPilotElements(createPilotElements(data.pilotData));
-            setClosestDistance({
-              distance: data.closestDistance.distance,
-              timestamp: new Date(+data.closestDistance.timestamp),
-            });
-          } catch (error) {
-            console.log("Error while setting data state: " + error);
-          }
-        });
+      try {
+        fetch("/api")
+          .then((res) => res.json())
+          .then((data) => {
+            try {
+              setPilotElements(createPilotElements(data.pilotData));
+              setClosestDistance({
+                distance: data.closestDistance.distance,
+                timestamp: new Date(+data.closestDistance.timestamp),
+              });
+            } catch (error) {
+              console.log("Error while setting data state: " + error);
+            }
+          });
+      } catch (error) {
+        console.log(
+          "Error while trying to fetch data from the backend server: " + error
+        );
+      }
     }, 2000);
     return () => clearInterval(interval);
   }, []);
