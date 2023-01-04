@@ -20,13 +20,12 @@ const writePilotData = (db, id, name, email, phoneNum, timestamp) => {
   });
 };
 
-const writePilotName = (db, name) => {
-  set(ref(db, "violatedNames/" + name), {
-    fullname: name,
+const writeClosestDistance = (db, distance, timestamp) => {
+  const time = new Date(timestamp);
+  set(ref(db, "distances/" + time.valueOf()), {
+    distance: distance,
   });
 };
-
-const writeClosestDistance = (db, distance) => {};
 
 const deletePilot = (db, id) => {
   remove(ref(db, "violatedPilots/" + id))
@@ -38,7 +37,17 @@ const deletePilot = (db, id) => {
     });
 };
 
-const getDatabaseOnChange = (db) => {
+const deleteDistance = (db, timeValue) => {
+  remove(ref(db, "distances/" + timeValue))
+    .then(() => {
+      console.log("Deleted distance " + timeValue);
+    })
+    .catch((err) => {
+      console.log("Error while trying to delete distance: " + timeValue);
+    });
+};
+
+const getPilotDatabase = (db) => {
   const pilotsRef = ref(db, "violatedPilots/");
   const violatedPilotsDb = [];
   onValue(pilotsRef, (snapshot) => {
@@ -53,16 +62,36 @@ const getDatabaseOnChange = (db) => {
         });
       });
     } catch (err) {
-      console.log("Error while fetching data: " + err);
+      console.log("Error while fetching pilot data: " + err);
     }
   });
   return violatedPilotsDb;
 };
 
+const getDistanceDatabase = (db) => {
+  const distanceRef = ref(db, "distances/");
+  const distanceDb = [];
+  onValue(distanceRef, (snapshot) => {
+    try {
+      Object.entries(snapshot.val()).forEach(([time, data]) => {
+        distanceDb.push({
+          distance: data.distance,
+          timestamp: time,
+        });
+      });
+    } catch (err) {
+      console.log("Error while fetching distance data: " + err);
+    }
+  });
+  return distanceDb;
+};
+
 module.exports = {
   initFirebase,
   writePilotData,
-  writePilotName,
-  getDatabaseOnChange,
+  getPilotDatabase,
   deletePilot,
+  writeClosestDistance,
+  getDistanceDatabase,
+  deleteDistance,
 };

@@ -1,5 +1,8 @@
 const parser = require("xml2json");
-const { deletePilot } = require("../firebaseDB/Firebase");
+const { deletePilot, deleteDistance } = require("../firebaseDB/Firebase");
+const { ref, set, onValue } = require("firebase/database");
+
+const TEN_MINUTE = 600000;
 
 const extractDronesData = (data) => {
   const dronesData = [];
@@ -36,6 +39,7 @@ const getSerialOfViolatedDrones = (dronesData) => {
       return {
         timestamp: drone.timestamp,
         serialNum: drone.serialNum,
+        distance: drone.distance,
       };
     });
 };
@@ -52,13 +56,20 @@ const compareTimestamp = (a, b) => {
   return dateA - dateB;
 };
 
-const filterTenMinutes = (db, pilotData) => {
+const filterTenMinutes = (db, pilotData, distanceData) => {
+  const now = new Date();
+  console.log("Filtering...");
   pilotData.forEach((pilot) => {
-    const now = new Date();
     const pilotTime = new Date(pilot.timestamp);
     const diff = Math.abs(now - pilotTime);
-    if (diff > 600000) {
+    if (diff > TEN_MINUTE) {
       deletePilot(db, pilot.id);
+    }
+  });
+  distanceData.forEach((distance) => {
+    const diff = Math.abs(now - distance.timestamp);
+    if (diff > TEN_MINUTE) {
+      deleteDistance(db, distance.timestamp);
     }
   });
 };

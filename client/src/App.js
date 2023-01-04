@@ -9,20 +9,16 @@ import {
   Thead,
   Tr,
   Th,
+  Text,
 } from "@chakra-ui/react";
 import { initFirebase } from "./firebase/Firebase";
 import { useState, useEffect } from "react";
 import { createPilotElements, startServer, stopServer } from "./utils/utils";
 
 function App() {
-  const [db, setDb] = useState();
   const [pilotElements, setPilotElements] = useState([]);
+  const [closestDistance, setClosestDistance] = useState({});
   const [serverIsOn, setServerIsOn] = useState(false);
-
-  // Accessing the Firebase database
-  useEffect(() => {
-    setDb(initFirebase());
-  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -30,7 +26,15 @@ function App() {
       fetch("/api")
         .then((res) => res.json())
         .then((data) => {
-          setPilotElements(createPilotElements(data));
+          try {
+            setPilotElements(createPilotElements(data.pilotData));
+            setClosestDistance({
+              distance: data.closestDistance.distance,
+              timestamp: new Date(+data.closestDistance.timestamp),
+            });
+          } catch (error) {
+            console.log("Error while setting data state: " + error);
+          }
         });
     }, 2000);
     return () => clearInterval(interval);
@@ -38,10 +42,11 @@ function App() {
 
   return (
     <Box w="100vw" h="100vh">
-      <Center h="100%">
-        <VStack h="100%">
-          <Heading>Birdnest</Heading>
+      <Center h="100%" w="100%">
+        <VStack h="100%" w="90%">
+          <Heading w="100%">Birdnest</Heading>
           <Button
+            colorScheme={serverIsOn ? "red" : "green"}
             onClick={() => {
               if (serverIsOn) {
                 stopServer();
@@ -54,10 +59,16 @@ function App() {
           >
             {serverIsOn ? "Stop Server" : "Start Server"}
           </Button>
-          <Heading>Violated Pilots</Heading>
 
-          <Box overflowY="scroll" maxH="80%">
-            <TableContainer>
+          <Heading>Violated Pilots</Heading>
+          {closestDistance.timestamp !== undefined && (
+            <Text>
+              Closest distance was {closestDistance.distance} at{" "}
+              {closestDistance.timestamp.toLocaleTimeString()}
+            </Text>
+          )}
+          <Box overflowY="scroll" maxH="60%">
+            <TableContainer maxW="100%">
               <Table>
                 <Thead position="sticky">
                   <Tr position="sticky">

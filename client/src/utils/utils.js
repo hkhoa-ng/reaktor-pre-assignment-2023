@@ -1,12 +1,6 @@
 import { Tbody, Tr, Td } from "@chakra-ui/react";
 import { nanoid } from "nanoid";
 
-const timestampFormat = (timeString) => {
-  const date = timeString.split("T")[0].split("-").reverse();
-  const time = timeString.split("T")[1].split(".")[0];
-  return date[0] + "/" + date[1] + "/" + date[2] + " at " + time;
-};
-
 const compareTimestamp = (a, b) => {
   const dateA = new Date(a.timestamp);
   const dateB = new Date(b.timestamp);
@@ -23,7 +17,8 @@ const createPilotElements = (pilotData) => {
           <Td>{pilot.name}</Td>
           <Td>{pilot.email}</Td>
           <Td>{pilot.phoneNum}</Td>
-          <Td>{timestamp.toUTCString()}</Td>
+          <Td>{timestamp.toLocaleTimeString()}</Td>
+          {/* <Td>{timestamp.toUTCString()}</Td> */}
         </Tr>
       );
     });
@@ -52,10 +47,4 @@ const startServer = () => {
     });
 };
 
-export {
-  timestampFormat,
-  compareTimestamp,
-  createPilotElements,
-  stopServer,
-  startServer,
-};
+export { compareTimestamp, createPilotElements, stopServer, startServer };

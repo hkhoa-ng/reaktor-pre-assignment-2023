@@ -14,7 +14,9 @@ const {
 const {
   initFirebase,
   writePilotData,
-  getDatabaseOnChange,
+  getPilotDatabase,
+  writeClosestDistance,
+  getDistanceDatabase,
 } = require("./firebaseDB/Firebase");
 
 // Define some constants
@@ -39,7 +41,9 @@ const setTimer = () => {
       const dronesData = extractDronesData(data);
       const violatedDrones = getSerialOfViolatedDrones(dronesData);
       if (violatedDrones.length > 0) {
-        violatedDrones.forEach((drone) => {
+        // Sort the violated drones array by distance, to get the closest distance of the violated drones
+        violatedDrones.sort((a, b) => a.distance - b.distance);
+        violatedDrones.forEach((drone, index) => {
           try {
             fetchPilotData(drone.serialNum).then((pilot) => {
               writePilotData(
@@ -50,6 +54,10 @@ const setTimer = () => {
                 pilot.phoneNumber,
                 drone.timestamp
               );
+              // Updating only the closest distance of this timestamp to the database
+              if (index === 0) {
+                writeClosestDistance(db, drone.distance, drone.timestamp);
+              }
             });
           } catch (error) {
             console.log(error);
@@ -61,7 +69,8 @@ const setTimer = () => {
 
   // Timer to delete old pilot entries every 10 minutes (when there is no trafic to the frontend)
   const deleteTimer = setInterval(() => {
-    const pilotData = getDatabaseOnChange(db);
+    const pilotData = getPilotDatabase(db);
+    const distanceData = getDistanceDatabase(db);
     filterTenMinutes(db, pilotData);
   }, TEN_MINUTE);
 
@@ -96,12 +105,19 @@ app.get("/resume", (req, res) => {
 // Filter out and delete all the violation that > 10 minutes from the database
 app.get("/api", (req, res) => {
   // Fetch data from backend API
-  const pilotData = getDatabaseOnChange(db).sort((a, b) => {
+  const pilotData = getPilotDatabase(db).sort((a, b) => {
     return compareTimestamp(a, b);
   });
+
+  const distanceData = getDistanceDatabase(db);
+  const closestDistance = distanceData.sort((a, b) => a.distance - b.distance);
+
   // Delete all the entries from more than 10 minutes ago
-  filterTenMinutes(db, pilotData);
-  res.json(pilotData);
+  filterTenMinutes(db, pilotData, distanceData);
+  res.json({
+    pilotData: pilotData,
+    closestDistance: closestDistance[0],
+  });
 });
 
 app.listen(8080, () => {
