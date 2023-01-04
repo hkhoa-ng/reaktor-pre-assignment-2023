@@ -14,11 +14,10 @@ const createPilotElements = (pilotData) => {
       const timestamp = new Date(pilot.timestamp);
       pilotElement.push(
         <Tr key={nanoid()}>
-          <Td>{pilot.name}</Td>
-          <Td>{pilot.email}</Td>
-          <Td>{pilot.phoneNum}</Td>
-          <Td>{timestamp.toLocaleTimeString()}</Td>
-          {/* <Td>{timestamp.toUTCString()}</Td> */}
+          <Td color="gray.400">{pilot.name}</Td>
+          <Td color="gray.400">{pilot.email}</Td>
+          <Td color="gray.400">{pilot.phoneNum}</Td>
+          <Td color="gray.400">{timestamp.toLocaleTimeString()}</Td>
         </Tr>
       );
     });
@@ -26,7 +25,7 @@ const createPilotElements = (pilotData) => {
     console.log("Error while creating pilot display elements: " + error);
   }
 
-  return <Tbody>{pilotElement}</Tbody>;
+  return pilotElement;
 };
 
 const stopServer = () => {

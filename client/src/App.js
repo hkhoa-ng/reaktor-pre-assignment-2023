@@ -4,19 +4,21 @@ import {
   Heading,
   VStack,
   Button,
-  Table,
-  TableContainer,
+  Text,
+  HStack,
   Thead,
+  Table,
   Tr,
   Th,
-  Text,
+  Td,
+  Tbody,
 } from "@chakra-ui/react";
-import { initFirebase } from "./firebase/Firebase";
 import { useState, useEffect } from "react";
-import { createPilotElements, startServer, stopServer } from "./utils/utils";
+import { startServer, stopServer } from "./utils/utils";
+import ScrollTable from "./components/ScrollTable";
 
 function App() {
-  const [pilotElements, setPilotElements] = useState([]);
+  const [pilotData, setPilotData] = useState([]);
   const [closestDistance, setClosestDistance] = useState({});
   const [serverIsOn, setServerIsOn] = useState(false);
 
@@ -28,7 +30,8 @@ function App() {
           .then((res) => res.json())
           .then((data) => {
             try {
-              setPilotElements(createPilotElements(data.pilotData));
+              // setPilotElements(createPilotElements(data.pilotData));
+              setPilotData(data.pilotData);
               setClosestDistance({
                 distance: data.closestDistance.distance,
                 timestamp: new Date(+data.closestDistance.timestamp),
@@ -47,47 +50,63 @@ function App() {
   }, []);
 
   return (
-    <Box w="100vw" h="100vh">
+    <Box w="100vw" h="100vh" bg="gray.700">
       <Center h="100%" w="100%">
-        <VStack h="100%" w="90%">
-          <Heading w="100%">Birdnest</Heading>
-          <Button
-            colorScheme={serverIsOn ? "red" : "green"}
-            onClick={() => {
-              if (serverIsOn) {
-                stopServer();
-                setServerIsOn(false);
-              } else {
-                startServer();
-                setServerIsOn(true);
-              }
-            }}
-          >
-            {serverIsOn ? "Stop Server" : "Start Server"}
-          </Button>
+        <VStack h="100%" w="90%" sss>
+          <Heading color="gray.300" maxH="20%">
+            PROJECT BIRDNEST
+          </Heading>
 
-          <Heading>Violated Pilots</Heading>
-          {closestDistance.timestamp !== undefined && (
-            <Text>
-              Closest distance was {closestDistance.distance} at{" "}
-              {closestDistance.timestamp.toLocaleTimeString()}
-            </Text>
-          )}
-          <Box overflowY="scroll" maxH="60%">
-            <TableContainer maxW="100%">
-              <Table>
-                <Thead position="sticky">
-                  <Tr position="sticky">
-                    <Th position="sticky">Pilot Name</Th>
-                    <Th position="sticky">Email</Th>
-                    <Th position="sticky">Phone Number</Th>
-                    <Th position="sticky">Lastest violation</Th>
-                  </Tr>
-                </Thead>
-                {pilotElements}
-              </Table>
-            </TableContainer>
-          </Box>
+          <HStack maxH="90%" maxW="100%" gap="20px">
+            <ScrollTable
+              headings={[
+                "PILOT NAME",
+                "EMAIL",
+                "PHONE NUMBER",
+                "LATEST VIOLATION",
+              ]}
+              pilotData={pilotData}
+              caption={"INFORMATION OF VIOLATED PILOTS IN THE LAST 10 MINUTES"}
+            />
+            <VStack maxH="100%">
+              {closestDistance.timestamp !== undefined && (
+                <Table size="sm" variant="striped" colorScheme="whiteAlpha">
+                  <Thead>
+                    <Tr>
+                      <Th color="gray.400" bg="gray.800" p="10px">
+                        Closest confirmed distance to the nest
+                      </Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    <Tr>
+                      <Td color="gray.400">
+                        <Text textAlign={"center"}>
+                          {Math.round(closestDistance.distance * 100) / 100}{" "}
+                          meters, at{" "}
+                          {closestDistance.timestamp.toLocaleTimeString()}
+                        </Text>
+                      </Td>
+                    </Tr>
+                  </Tbody>
+                </Table>
+              )}
+              <Button
+                colorScheme={serverIsOn ? "red" : "green"}
+                onClick={() => {
+                  if (serverIsOn) {
+                    stopServer();
+                    setServerIsOn(false);
+                  } else {
+                    startServer();
+                    setServerIsOn(true);
+                  }
+                }}
+              >
+                {serverIsOn ? "Stop Server" : "Start Server"}
+              </Button>
+            </VStack>
+          </HStack>
         </VStack>
       </Center>
     </Box>
