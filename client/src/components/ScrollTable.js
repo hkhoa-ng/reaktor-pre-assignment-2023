@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import {
   Box,
   Table,
@@ -12,10 +12,17 @@ import {
 import { nanoid } from "nanoid";
 
 function ScrollTable({ headings, pilotData, caption }) {
+  const messagesEndRef = useRef(null);
+  const scrollToBottom = () => {
+    messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+  };
+  useEffect(scrollToBottom, [pilotData]);
+
   return (
     <Box
       overflowY="auto"
-      maxH="100%"
+      maxH="90%"
+      maxW="75%"
       sx={{
         "::-webkit-scrollbar": {
           width: "10px",
@@ -25,7 +32,7 @@ function ScrollTable({ headings, pilotData, caption }) {
         },
       }}
     >
-      <Table size="sm" variant="striped" colorScheme="whiteAlpha">
+      <Table size="sm" variant={"striped"} colorScheme="blackAlpha">
         <TableCaption
           fontWeight="bold"
           color="gray.400"
@@ -55,12 +62,13 @@ function ScrollTable({ headings, pilotData, caption }) {
                 <Td color="gray.400">{name}</Td>
                 <Td color="gray.400">{email}</Td>
                 <Td color="gray.400">{phoneNum}</Td>
-                <Td color="gray.400">{time.toLocaleTimeString()}</Td>
+                <Td color="gray.400">{time.toLocaleString()}</Td>
               </Tr>
             );
           })}
         </Tbody>
       </Table>
+      <div ref={messagesEndRef} />
     </Box>
   );
 }

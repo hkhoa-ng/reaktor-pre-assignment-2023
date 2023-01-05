@@ -11,20 +11,46 @@ import {
   Tr,
   Th,
   Td,
+  Stat,
+  StatLabel,
+  StatHelpText,
+  StatNumber,
   Tbody,
+  useToast,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { startServer, stopServer } from "./utils/utils";
 import ScrollTable from "./components/ScrollTable";
+import Console from "./components/Console";
 
 function App() {
   const [pilotData, setPilotData] = useState([]);
   const [closestDistance, setClosestDistance] = useState({});
-  const [serverIsOn, setServerIsOn] = useState(false);
+  const [serverIsOn, setServerIsOn] = useState(true);
+  const [logMessages, setLogMessages] = useState([]);
+
+  const addNewLogMessage = (msg) => {
+    const now = new Date();
+    setLogMessages((prev) => {
+      const oldLogs = [...prev].filter((msg) => {
+        const oldTime = new Date(msg.timestamp);
+        if (Math.abs(now - oldTime) < 30000) {
+          return msg;
+        }
+      });
+
+      return [
+        ...oldLogs,
+        {
+          message: msg,
+          timestamp: now,
+        },
+      ];
+    });
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log("Get new drone data at " + new Date().toLocaleTimeString());
       try {
         fetch("https://khoa-ng-birdnest-backend.fly.dev/api", {
           headers: {
@@ -32,23 +58,32 @@ function App() {
             "Access-Control-Allow-Origin": "*",
           },
         })
-          .then((res) => res.json())
+          .then((res) => {
+            const timestamp = new Date();
+            addNewLogMessage(
+              `Fetched new drone data from server at ${timestamp.toLocaleString()}.`
+            );
+            return res.json();
+          })
           .then((data) => {
             try {
-              // setPilotElements(createPilotElements(data.pilotData));
               setPilotData(data.pilotData);
               setClosestDistance({
                 distance: data.closestDistance.distance,
                 timestamp: new Date(+data.closestDistance.timestamp),
               });
             } catch (error) {
+              addNewLogMessage(`Error while setting data state: ${error}.`);
               console.log("Error while setting data state: " + error);
             }
+          })
+          .catch((err) => {
+            addNewLogMessage(
+              `Error while trying to fetch data from the backend server: ${err}.`
+            );
           });
       } catch (error) {
-        console.log(
-          "Error while trying to fetch data from the backend server: " + error
-        );
+        addNewLogMessage(`Error while trying to fetch data: ${error}.`);
       }
     }, 2000);
     return () => clearInterval(interval);
@@ -57,12 +92,12 @@ function App() {
   return (
     <Box w="100vw" h="100vh" bg="gray.700">
       <Center h="100%" w="100%">
-        <VStack h="100%" w="90%" sss>
-          <Heading color="gray.300" maxH="20%">
-            PROJECT BIRDNEST
+        <VStack h="70%" w="100%">
+          <Heading color="gray.400" maxH="20%">
+            🪺 PROJECT BIRDNEST 🪺
           </Heading>
 
-          <HStack maxH="90%" maxW="100%" gap="20px">
+          <HStack maxH="90%" w="80%" gap="20px">
             <ScrollTable
               headings={[
                 "PILOT NAME",
@@ -71,45 +106,47 @@ function App() {
                 "LATEST VIOLATION",
               ]}
               pilotData={pilotData}
-              caption={"INFORMATION OF VIOLATED PILOTS IN THE LAST 10 MINUTES"}
+              caption={
+                "🚩 INFORMATION OF VIOLATED PILOTS (IN THE LAST 10 MINUTES) 🚩"
+              }
             />
-            <VStack maxH="100%">
+            <VStack h="90%" gap="10px" w="35%">
               {closestDistance.timestamp !== undefined && (
-                <Table size="sm" variant="striped" colorScheme="whiteAlpha">
-                  <Thead>
-                    <Tr>
-                      <Th color="gray.400" bg="gray.800" p="10px">
-                        Closest confirmed distance to the nest
-                      </Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    <Tr>
-                      <Td color="gray.400">
-                        <Text textAlign={"center"}>
-                          {Math.round(closestDistance.distance * 100) / 100}{" "}
-                          meters, at{" "}
-                          {closestDistance.timestamp.toLocaleTimeString()}
-                        </Text>
-                      </Td>
-                    </Tr>
-                  </Tbody>
-                </Table>
+                <Stat color="gray.400" w="100%">
+                  <StatLabel fontSize="1.1rem">
+                    CLOSEST CONFIRMED DISTANCE TO THE NEST
+                  </StatLabel>
+                  <StatLabel>(in the last 10 minutes)</StatLabel>
+                  <StatNumber>
+                    {Math.round(closestDistance.distance * 100) / 100} meters
+                  </StatNumber>
+                  <StatHelpText>
+                    at {closestDistance.timestamp.toLocaleString()}
+                  </StatHelpText>
+                </Stat>
               )}
-              <Button
+
+              <Console messages={logMessages} />
+              {/* <Button
+                w="100%"
                 colorScheme={serverIsOn ? "red" : "green"}
                 onClick={() => {
+                  const timestamp = new Date();
                   if (serverIsOn) {
                     stopServer();
                     setServerIsOn(false);
+                    addNewLogMessage(`Paused data fetching in backend server.`);
                   } else {
                     startServer();
                     setServerIsOn(true);
+                    addNewLogMessage(
+                      `Resumed data fetching in backend server.`
+                    );
                   }
                 }}
               >
                 {serverIsOn ? "Stop Server" : "Start Server"}
-              </Button>
+              </Button> */}
             </VStack>
           </HStack>
         </VStack>

@@ -29,7 +29,7 @@ const createPilotElements = (pilotData) => {
 };
 
 const stopServer = () => {
-  fetch("/stop")
+  fetch("https://khoa-ng-birdnest-backend.fly.dev/stop")
     .then((res) => res.json())
     .then((data) => console.log(data))
     .catch((err) => {
@@ -38,7 +38,7 @@ const stopServer = () => {
 };
 
 const startServer = () => {
-  fetch("/resume")
+  fetch("https://khoa-ng-birdnest-backend.fly.dev/resume")
     .then((res) => res.json())
     .then((data) => console.log(data))
     .catch((err) => {
