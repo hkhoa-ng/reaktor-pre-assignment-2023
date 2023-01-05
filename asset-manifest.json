@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/reaktor-pre-assignment-2023/static/js/main.76f4a9e0.js",
+    "main.js": "/reaktor-pre-assignment-2023/static/js/main.ca4453b8.js",
     "index.html": "/reaktor-pre-assignment-2023/index.html",
-    "main.76f4a9e0.js.map": "/reaktor-pre-assignment-2023/static/js/main.76f4a9e0.js.map"
+    "main.ca4453b8.js.map": "/reaktor-pre-assignment-2023/static/js/main.ca4453b8.js.map"
   },
   "entrypoints": [
-    "static/js/main.76f4a9e0.js"
+    "static/js/main.ca4453b8.js"
   ]
 }
