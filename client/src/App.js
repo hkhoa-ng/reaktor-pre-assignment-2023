@@ -26,7 +26,12 @@ function App() {
     const interval = setInterval(() => {
       console.log("Get new drone data at " + new Date().toLocaleTimeString());
       try {
-        fetch("/api")
+        fetch("https://khoa-ng-birdnest-backend.fly.dev/api", {
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Access-Control-Allow-Origin": "*",
+          },
+        })
           .then((res) => res.json())
           .then((data) => {
             try {
