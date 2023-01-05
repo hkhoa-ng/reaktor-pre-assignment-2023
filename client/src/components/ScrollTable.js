@@ -30,6 +30,9 @@ function ScrollTable({ headings, pilotData, caption }) {
         "::-webkit-scrollbar-thumb": {
           background: "gray.500",
         },
+        "::-webkit-scrollbar-track": {
+          background: "gray.800",
+        },
       }}
     >
       <Table size="sm" variant={"striped"} colorScheme="blackAlpha">

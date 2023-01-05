@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Box, Text, Code } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import { nanoid } from "nanoid";
 
 function Console({ messages }) {
@@ -7,7 +7,15 @@ function Console({ messages }) {
   const scrollToBottom = () => {
     messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
+  const [currentTime, setCurrentTime] = useState(new Date());
   useEffect(scrollToBottom, [messages]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  });
 
   const logMsg = messages.map((msg) => {
     const time = new Date(msg.timestamp);
@@ -38,6 +46,9 @@ function Console({ messages }) {
         "::-webkit-scrollbar-thumb": {
           background: "gray.500",
         },
+        "::-webkit-scrollbar-track": {
+          background: "gray.800",
+        },
       }}
     >
       <Text
@@ -50,7 +61,7 @@ function Console({ messages }) {
         position="sticky"
         top={0}
       >
-        logs of last 30 seconds
+        logs of last 30 seconds (now {currentTime.toLocaleTimeString()})
       </Text>
       {logMsg}
       <div ref={messagesEndRef} />

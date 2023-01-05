@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+const Promise = require("bluebird");
 app.use(cors());
 app.use(require("express-status-monitor")());
 
@@ -28,12 +29,13 @@ const TEN_MINUTE = 600000;
 // Connect to the database
 const db = initFirebase();
 
-// Array to keep track of all the repeating tasks
+// Array to keep track of all the repeating tasks (intervals)
 const timers = [];
 
 /**
  * Start 2 repeating intervals:
- * - A 2-second interval to fetch and process new drones (and possibly pilot) data every 2 seconds
+ * - A 2-second interval to fetch and process new drones (and possibly pilot) data every 2 seconds. Then upload
+ *   this data to the database
  * - A 10-minute interval to delete old entries (>10 minutes) from the database (only when there is no traffic in the frontend)
  */
 const setTimer = () => {
@@ -87,6 +89,8 @@ const setTimer = () => {
             }
           });
         }
+        delete dronesData;
+        delete violatedDrones;
       });
     } catch (error) {
       console.log("Error while fetching drone data from Reaktor API: " + error);
@@ -98,6 +102,8 @@ const setTimer = () => {
     const pilotData = getPilotDatabase(db);
     const distanceData = getDistanceDatabase(db);
     filterTenMinutes(db, pilotData, distanceData);
+    delete pilotData;
+    delete distanceData;
   }, TEN_MINUTE);
 
   timers.push(fetchTimer, deleteTimer);
@@ -144,23 +150,26 @@ app.get("/resume", (req, res) => {
  * - Update and delete old entries (>10 minutes) in the database
  */
 app.get("/api", (req, res) => {
-  // Fetch pilot data and sort it in latest violation order
+  // Delete all the old entries from more than 10 minutes ago
+  filterTenMinutes(db, getPilotDatabase(db), getDistanceDatabase(db));
+
+  // Fetch filtered pilot data and sort it in latest violation order
   const pilotData = getPilotDatabase(db).sort((a, b) => {
     return compareTimestamp(a, b);
   });
 
-  // Fetch distance data in the last 10 minutes, and find the closest distance to the nest
+  // Fetch filtered distance data in the last 10 minutes, and find the closest distance to the nest
   const distanceData = getDistanceDatabase(db);
   const closestDistance = distanceData.sort((a, b) => a.distance - b.distance);
-
-  // Delete all the old entries from more than 10 minutes ago
-  filterTenMinutes(db, pilotData, distanceData);
 
   // Response to the frontend with the data
   res.json({
     pilotData: pilotData,
     closestDistance: closestDistance[0],
   });
+
+  delete distanceData;
+  delete closestDistance;
 });
 
 app.listen(8080, () => {
