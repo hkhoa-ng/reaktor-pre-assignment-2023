@@ -24,7 +24,6 @@ const {
 
 // Define some constants
 const TWO_SECOND = 2000;
-const TEN_MINUTE = 600000;
 
 // Connect to the database
 const db = initFirebase();
@@ -40,6 +39,14 @@ const timers = [];
  */
 const setTimer = () => {
   console.log("Starting server... Updating data every 2 seconds");
+  // Timer to delete old entries > 10 minutes
+  const deleteTimer = setInterval(() => {
+    const pilotData = getPilotDatabase(db);
+    const distanceData = getDistanceDatabase(db);
+    filterTenMinutes(db, pilotData, distanceData);
+    delete pilotData;
+    delete distanceData;
+  }, TWO_SECOND);
 
   // Timer to fetch and update every 2 seconds
   const fetchTimer = setInterval(() => {
@@ -97,15 +104,6 @@ const setTimer = () => {
     }
   }, TWO_SECOND);
 
-  // Timer to delete old pilot entries every 10 minutes (when there is no trafic to the frontend)
-  const deleteTimer = setInterval(() => {
-    const pilotData = getPilotDatabase(db);
-    const distanceData = getDistanceDatabase(db);
-    filterTenMinutes(db, pilotData, distanceData);
-    delete pilotData;
-    delete distanceData;
-  }, TEN_MINUTE);
-
   timers.push(fetchTimer, deleteTimer);
 };
 
@@ -151,7 +149,7 @@ app.get("/resume", (req, res) => {
  */
 app.get("/api", (req, res) => {
   // Delete all the old entries from more than 10 minutes ago
-  filterTenMinutes(db, getPilotDatabase(db), getDistanceDatabase(db));
+  // filterTenMinutes(db, getPilotDatabase(db), getDistanceDatabase(db));
 
   // Fetch filtered pilot data and sort it in latest violation order
   const pilotData = getPilotDatabase(db).sort((a, b) => {

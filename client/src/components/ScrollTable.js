@@ -11,15 +11,26 @@ import {
 } from "@chakra-ui/react";
 import { nanoid } from "nanoid";
 
+/**
+ * React ScrollTable component that display a scrollable table, to view information of violated pilot
+ * @param {Array} headings - the headings of the table
+ * @param {Array} pilotData - pilot data to be displayed in the table
+ * @param {String} caption - caption (in this case name) of the table
+ * @returns React component that rendens the pilot data table
+ */
 function ScrollTable({ headings, pilotData, caption }) {
-  const messagesEndRef = useRef(null);
+  /**
+   * Simple function to always scroll the table to the bottom (latest pilot violation)
+   */
   const scrollToBottom = () => {
     messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
+  const messagesEndRef = useRef(null);
   useEffect(scrollToBottom, [pilotData]);
 
   return (
     <Box
+      data-testid="scroll-table"
       overflowY="auto"
       maxH="90%"
       maxW="75%"
@@ -65,7 +76,7 @@ function ScrollTable({ headings, pilotData, caption }) {
                 <Td color="gray.400">{name}</Td>
                 <Td color="gray.400">{email}</Td>
                 <Td color="gray.400">{phoneNum}</Td>
-                <Td color="gray.400">{time.toLocaleString()}</Td>
+                <Td color="gray.400">{time.toLocaleTimeString()}</Td>
               </Tr>
             );
           })}

@@ -1,1 +1,0 @@
-# Frontend of the Application

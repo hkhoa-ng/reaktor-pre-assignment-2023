@@ -13,24 +13,42 @@ import { useState, useEffect } from "react";
 import ScrollTable from "./components/ScrollTable";
 import Console from "./components/Console";
 import HashLoader from "react-spinners/HashLoader";
-import Panel from "./components/Panel";
 
+/**
+ * React App component for the whole app
+ * @returns React component that rendens the application
+ */
 function App() {
+  /**
+   * I used 4 states for the main app
+   * - pilotData: an array state that contains all violated pilot data to render to the table
+   * - closestDistance: an object state that contains the closest confirmed distance to the nest within the last 10 minutes
+   * - logMessages: an array state that contains all log messages in the last 30 seconds (to save memory)
+   * - loading: a boolean state to check render the loading component initially
+   */
   const [pilotData, setPilotData] = useState([]);
   const [closestDistance, setClosestDistance] = useState({});
   const [logMessages, setLogMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Set loading animation to 4 seconds (so that everything should be loaded in)
+   */
   useEffect(() => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-    }, 4000);
+    }, 3000);
   }, []);
 
+  /**
+   * Update new log messages to the logMessages state
+   * @param {Object} msg - a log message object that contains the timestamp and the log message
+   */
   const addNewLogMessage = (msg) => {
     const now = new Date();
     setLogMessages((prev) => {
+      // Filter out old log messages that are older than 30 seconds
       const oldLogs = [...prev].filter((msg) => {
         const oldTime = new Date(msg.timestamp);
         if (Math.abs(now - oldTime) < 30000) {
@@ -48,6 +66,9 @@ function App() {
     });
   };
 
+  /**
+   * The main 2 seconds repeat interval that fetches data from the backend
+   */
   useEffect(() => {
     const interval = setInterval(() => {
       try {
@@ -61,7 +82,7 @@ function App() {
           .then((res) => {
             const timestamp = new Date();
             addNewLogMessage(
-              `Fetched new data from server at ${timestamp.toLocaleString()}.`
+              `Fetched new data from server at ${timestamp.toLocaleTimeString()}.`
             );
             return res.json();
           })
@@ -130,15 +151,9 @@ function App() {
                       {Math.round(closestDistance.distance * 100) / 100} meters
                     </StatNumber>
                     <StatHelpText>
-                      (at {closestDistance.timestamp.toLocaleString()})
+                      (at {closestDistance.timestamp.toLocaleTimeString()})
                     </StatHelpText>
                   </Stat>
-                  // <Panel
-                  //   content={`${
-                  //     Math.round(closestDistance.distance * 100) / 100
-                  //   } meters`}
-                  //   caption={`at ${closestDistance.timestamp.toLocaleString()}`}
-                  // />
                 )}
 
                 <Console messages={logMessages} />
